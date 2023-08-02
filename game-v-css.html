@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game of Life with CSS3 and JavaScript</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(100, 8px);
+      gap: 1px;
+      border: 1px solid #ccc;
+      background-color: white;
+    }
+
+    .cell {
+      width: 8px;
+      height: 8px;
+    }
+
+    .cell.alive {
+      background-color: black;
+    }
+
+    .cell.dead {
+      background-color: white;
+    }
+
+    .cell.stagnant {
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const rows = 100;
+    const cols = 100;
+    const cellSize = 8;
+    const grid = new Array(rows).fill().map(() => new Array(cols).fill(false));
+    const newGrid = new Array(rows).fill().map(() => new Array(cols).fill(false));
+    const stagnantThreshold = 10; // Number of generations before a cell is considered stagnant
+    const stagnantCount = new Array(rows).fill().map(() => new Array(cols).fill(0));
+    let isRunning = true;
+    let intervalId;
+
+    function initializeGrid() {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          grid[row][col] = Math.random() < 0.5;
+        }
+      }
+    }
+
+    function createGridElement() {
+      const gridContainer = document.getElementById("grid");
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          gridContainer.appendChild(cell);
+        }
+      }
+    }
+
+    function drawGrid() {
+      const cells = document.getElementsByClassName("cell");
+      for (let i = 0; i < cells.length; i++) {
+        const row = Math.floor(i / cols);
+        const col = i % cols;
+        const cell = cells[i];
+
+        if (!grid[row][col]) {
+          stagnantCount[row][col]++;
+          if (stagnantCount[row][col] >= stagnantThreshold) {
+            cell.classList.add("stagnant");
+            cell.classList.remove("alive");
+          }
+        } else {
+          stagnantCount[row][col] = 0;
+          cell.classList.remove("stagnant");
+          cell.classList.add("alive");
+        }
+
+        cell.classList.toggle("dead", !grid[row][col]);
+      }
+    }
+
+    function countNeighbors(row, col) {
+      let count = 0;
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (i === 0 && j === 0) continue;
+          const newRow = row + i;
+          const newCol = col + j;
+          if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+            count += grid[newRow][newCol] ? 1 : 0;
+          }
+        }
+      }
+      return count;
+    }
+
+    function updateGrid() {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const neighbors = countNeighbors(row, col);
+          if (grid[row][col]) {
+            newGrid[row][col] = neighbors === 2 || neighbors === 3;
+          } else {
+            newGrid[row][col] = neighbors === 3;
+          }
+        }
+      }
+
+      // Copy newGrid to grid to update the current generation
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          grid[row][col] = newGrid[row][col];
+        }
+      }
+    }
+
+    function runGameOfLife() {
+      initializeGrid();
+      createGridElement();
+      drawGrid();
+
+      function updateAndDraw() {
+        updateGrid();
+        drawGrid();
+      }
+
+      intervalId = setInterval(updateAndDraw, 100);
+    }
+
+    function toggleGame() {
+      if (isRunning) {
+        clearInterval(intervalId);
+      } else {
+        intervalId = setInterval(updateAndDraw, 100);
+      }
+      isRunning = !isRunning;
+    }
+
+    runGameOfLife();
+    document.getElementById("grid").addEventListener("click", toggleGame);
+  </script>
+</body>
+</html>
