@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game of Life with p5.js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body>
+  <script>
+    const rows = 60;
+    const cols = 60;
+    const cellSize = 8;
+    let grid = new Array(rows).fill().map(() => new Array(cols).fill(false));
+    let newGrid = new Array(rows).fill().map(() => new Array(cols).fill(false));
+
+    function initializeGrid() {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          grid[row][col] = Math.random() < 0.5;
+        }
+      }
+    }
+
+    function drawGrid() {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * cellSize;
+          const y = row * cellSize;
+          const alive = grid[row][col];
+
+          fill(alive ? 'black' : 'white');
+          stroke('gray');
+          rect(x, y, cellSize, cellSize);
+        }
+      }
+    }
+
+    function countNeighbors(row, col) {
+      let count = 0;
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (i === 0 && j === 0) continue;
+          const newRow = row + i;
+          const newCol = col + j;
+          if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+            count += grid[newRow][newCol] ? 1 : 0;
+          }
+        }
+      }
+      return count;
+    }
+
+    function updateGrid() {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const neighbors = countNeighbors(row, col);
+          if (grid[row][col]) {
+            newGrid[row][col] = neighbors === 2 || neighbors === 3;
+          } else {
+            newGrid[row][col] = neighbors === 3;
+          }
+        }
+      }
+
+      // Swap grids to avoid unnecessary copying
+      [grid, newGrid] = [newGrid, grid];
+    }
+
+    function setup() {
+      createCanvas(cols * cellSize, rows * cellSize);
+      initializeGrid();
+    }
+
+    function draw() {
+      background(255);
+      drawGrid();
+      updateGrid();
+    }
+  </script>
+</body>
+</html>
