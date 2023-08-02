@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game of Life</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f5f5f5;
+    }
+
+    h1 {
+         margin-top: 20px;
+    }
+
+    table {
+        margin: 10px auto;
+        border-collapse: collapse;
+    }
+
+    td {
+        width: 10px;
+        height: 10px;
+        border: 1px solid #ccc;
+    }
+
+    td.alive {
+         background-color: black;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>Game of Life</h1>
+  <table id="grid"></table>
+  <button id="startBtn"> START</button>
+   
+  <script>
+   const rows = 50;
+const cols = 50;
+const grid = new Array(rows).fill().map(() => new Array(cols).fill(false));
+let isRunning = false;
+let intervalId;
+
+function initializeGrid() {
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      grid[row][col] = Math.random() < 0.3; // Adjust the probability to control initial live cells
+    }
+  }
+}
+
+function createGrid() {
+  const gridElement = document.getElementById("grid");
+  gridElement.innerHTML = "";
+  for (let row = 0; row < rows; row++) {
+    const rowElement = document.createElement("tr");
+    for (let col = 0; col < cols; col++) {
+      const cell = document.createElement("td");
+      cell.addEventListener("click", () => toggleCellState(row, col));
+      rowElement.appendChild(cell);
+    }
+    gridElement.appendChild(rowElement);
+  }
+}
+
+function toggleCellState(row, col) {
+  grid[row][col] = !grid[row][col];
+  drawGrid();
+}
+
+function drawGrid() {
+  const gridElement = document.getElementById("grid");
+  const cells = gridElement.getElementsByTagName("td");
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const index = row * cols + col;
+      const cell = cells[index];
+      cell.className = grid[row][col] ? "alive" : "";
+    }
+  }
+}
+
+function countNeighbors(row, col) {
+  let count = 0;
+  for (let i = -1; i <= 1; i++) {
+    for (let j = -1; j <= 1; j++) {
+      if (i === 0 && j === 0) continue;
+      const newRow = row + i;
+      const newCol = col + j;
+      if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+        count += grid[newRow][newCol] ? 1 : 0;
+      }
+    }
+  }
+  return count;
+}
+
+function updateGrid() {
+  const newGrid = new Array(rows).fill().map(() => new Array(cols).fill(false));
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const neighbors = countNeighbors(row, col);
+      if (grid[row][col]) {
+        newGrid[row][col] = neighbors === 2 || neighbors === 3;
+      } else {
+        newGrid[row][col] = neighbors === 3;
+      }
+    }
+  }
+  grid.splice(0, grid.length, ...newGrid);
+}
+
+function updateAndDraw() {
+  updateGrid();
+  drawGrid();
+}
+
+function startGame() {
+  initializeGrid();
+  createGrid();
+  drawGrid();
+  if (!isRunning) {
+    intervalId = setInterval(updateAndDraw, 200);
+    isRunning = true;
+  }
+}
+
+function stopGame() {
+  if (isRunning) {
+    clearInterval(intervalId);
+    isRunning = false;
+  }
+}
+
+document.getElementById("grid").addEventListener("click", toggleCellState);
+document.getElementById("startBtn").addEventListener("click", startGame);
+ 
+// Start the game initially
+startGame();
+
+  </script>
+</body>
+</html>
+
